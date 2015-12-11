@@ -24,7 +24,15 @@ if (typeof window !== 'object') return;
 
 // We do not want this script to be applied in browsers that do not support those
 // That means no smoothscroll on IE9 and below.
-if(document.querySelectorAll === void 0 || window.pageYOffset === void 0 || history.pushState === void 0) { return; }
+if(document.querySelectorAll === void 0 || window.pageYOffset === void 0 || history.pushState === void 0) { return function() {}; }
+
+function hasScroll(element) {
+  var style = getComputedStyle(element);
+  return {
+    x: style.overflowX === 'auto' && element.scrollWidth > element.clientWidth,
+    y: style.overflowY === 'auto' && element.scrollHeight > element.clientHeight,
+  };
+}
 
 // Get the top position of an element in the document
 var getTop = function(element, context) {
@@ -94,6 +102,31 @@ var smoothScroll = function(el, duration, callback, context){
     }
     step();
 }
+
+/**
+ * Automatically scrolls any parent elements so that the given element will be on screen.
+ * @param{HTMLElement} element  - the element to scroll on screen.
+ * @param{number}      duration - the duration of the scroll animation, in milliseconds
+ */
+smoothScroll.auto = function(element, duration) {
+  // this keeps track of where the element top will wind up relative to the current
+  // parent.
+  var elementTop = element.offsetTop;
+  // make sure to use offsetParent, not parentElement, so that adding up offsetTops
+  // will produce the correct value for elementTop
+  var parent = element.offsetParent;
+  // find all parents with scrollbars and scroll them so that the element will be on screen.
+  while (parent && parent !== document.body.parentElement) {
+    if (hasScroll(parent).y) {
+      var targetScrollTop = Math.max(0, Math.min(elementTop, parent.scrollHeight - parent.offsetHeight));
+      elementTop -= targetScrollTop;
+      smoothScroll(targetScrollTop, duration, function() {}, parent);
+    }
+    elementTop += parent.offsetTop;
+    element = parent;
+    parent = element.offsetParent;
+  }
+};
 
 smoothScroll.attachToAllLinks = function() {
     var linkHandler = function(ev) {
