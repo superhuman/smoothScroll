@@ -1,5 +1,5 @@
 {
-  "name": "smoothscroll",
+  "name": "pr20-smoothscroll",
   "version": "0.2.2",
   "description": "A teeny tiny smooth scroll script with ease-in-out effect and no jQuery.",
   "main": "smoothscroll.js",
